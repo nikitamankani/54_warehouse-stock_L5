@@ -1,0 +1,25 @@
+# Lab 5 – Issue Table (warehouse_stock_manager.py)
+
+Line numbers refer to the **original** file. Ordered by severity (High → Low), security first.
+
+**Scores:** Pylint 4.48/10 → **10.00/10** · Bandit 5 issues → **0** · Flake8 19 warnings → **0**
+
+| # | Issue | Type | Line(s) | Description | Fix Approach |
+|---|-------|------|---------|-------------|--------------|
+| 1 | Weak MD5 hash (Bandit B324, **High**) | Security | 31 | `hashlib.md5` is cryptographically broken; Bandit flags it as High severity. | Replaced with `hashlib.sha256(...)`; still truncated to 6 chars for the bin-label fingerprint. |
+| 2 | Use of `eval()` on supervisor formula (Bandit B307, **Medium**; Pylint W0123) | Security | 62 | `eval(formula, {"current": current})` lets anyone at the console run arbitrary Python (e.g. `__import__('os').system(...)`). The globals dict does not sandbox it. | Wrote `evaluate_formula()` that parses with `ast.parse(mode="eval")` and only allows ints, the name `current`, unary minus and `+ - * //`. Anything else raises `ValueError`, which is caught and logged. |
+| 3 | Pointless `eval()` in main (Bandit B307, **Medium**; Pylint W0123) | Security | 80 | `eval("print('stock audit complete')")` – eval used for no reason. | Replaced with a plain `print("stock audit complete")`. |
+| 4 | Hardcoded supervisor password (Bandit B105, Low) | Security | 10 | `SUPERVISOR_PASSWORD = "wh-admin-1234"` is committed in source code; anyone with the repo knows it. | Password is read from the `WH_SUPERVISOR_PASSWORD` environment variable; adjustment is refused if it is unset. Compared using `hmac.compare_digest` (constant-time). |
+| 5 | Bare `except: pass` (Bandit B110, Pylint W0702, Flake8 E722) | Bug / Security | 23-24 | Silently swallows **every** error, including typos and `KeyboardInterrupt`; removing an unknown SKU fails with no message. | Removed the try/except; now explicitly checks `if sku not in warehouse_stock`, logs a warning and returns `False`. |
+| 6 | Mutable default argument `history=[]` (Pylint W0102) | Bug | 12 | The same list is shared across all calls, so history leaks between calls and grows forever. | Default changed to `None` and a new list is created inside the function. |
+| 7 | Negative / invalid quantities accepted (found by running the program) | Logic bug | 12-16, 69 | `addStock("WID-002", -4)` created stock of **-4**, which was then printed and reordered. | `add_stock` / `remove_stock` validate that `qty` is a positive int (bools rejected) and log a warning otherwise. |
+| 8 | Non-string SKU accepted (found by running the program) | Logic bug | 13, 70 | `addStock(404, 15)` stored an int key; after save/load it silently became the string `"404"`, so the data changed type. | `_is_valid_sku()` requires a non-empty string; invalid SKUs are rejected with a warning. |
+| 9 | Over-issuing silently deletes the SKU (found by running the program) | Logic bug | 20-22, 73 | `removeStock("WID-001", 500)` with only 28 in stock dropped the stock to -472 and **deleted WID-001** from the report without any warning. | `remove_stock` refuses if `qty > stock` and logs how many units are available; SKU is only deleted when it hits exactly 0. |
+| 10 | `getStock` crashes on unknown SKU | Bug | 27 | `warehouse_stock[sku]` raises `KeyError` for any SKU not in stock. | Uses `warehouse_stock.get(sku, 0)`. |
+| 11 | Files opened without `with` / encoding (Pylint R1732, W1514) | Quality | 34, 40, 63 | File handles leak if an exception occurs before `close()`; encoding depends on the OS. | All file access uses `with open(..., encoding="utf-8")`; `json.load` / `json.dump` used directly. |
+| 12 | `global` statement (Pylint W0603) | Quality | 35 | `loadStock` rebinds the global dict, which breaks any other reference to it. | `load_stock` now does `warehouse_stock.clear()` + `update(data)` on the same dict – no `global` needed. |
+| 13 | Unused imports and variable (Pylint W0611/W0612, Flake8 F401/F841) | Quality | 2, 4, 54 | `logging` and `os` were imported but unused; `total_units` computed but never used. | `logging` and `os` are now actually used (warnings, env var); `total_units` removed. |
+| 14 | camelCase function names (Pylint C0103) | Style | 12-57 | Function names don't follow PEP 8 snake_case. | Renamed: `add_stock`, `remove_stock`, `get_stock`, `sku_checksum`, `load_stock`, `save_stock`, `print_report`, `check_reorder`, `apply_adjustment`. |
+| 15 | Missing docstrings, %-formatting (Pylint C0114/C0116/C0209) | Style | 1, 12-67 | No module or function docstrings; old-style `%` string formatting. | Added module + function docstrings; switched to f-strings (and lazy `%s` args inside `logger` calls). |
+| 16 | Module-level `main()` call | Quality | 82 | Importing the module runs the whole demo and writes files. | Wrapped in `if __name__ == "__main__":`. |
+| 17 | PEP 8 formatting (Flake8 E302, E305, E501, W291; Pylint C0301, C0303) | Style | 12-82 | Only 1 blank line between functions, lines over 79 chars, trailing whitespace. | Two blank lines between top-level defs, long lines wrapped, trailing whitespace removed. |
