@@ -1,0 +1,19 @@
+warehouse_stock_manager.py:2:1: F401 'logging' imported but unused
+warehouse_stock_manager.py:4:1: F401 'os' imported but unused
+warehouse_stock_manager.py:12:1: E302 expected 2 blank lines, found 1
+warehouse_stock_manager.py:16:80: E501 line too long (83 > 79 characters)
+warehouse_stock_manager.py:18:1: E302 expected 2 blank lines, found 1
+warehouse_stock_manager.py:23:5: E722 do not use bare 'except'
+warehouse_stock_manager.py:26:1: E302 expected 2 blank lines, found 1
+warehouse_stock_manager.py:29:1: E302 expected 2 blank lines, found 1
+warehouse_stock_manager.py:33:1: E302 expected 2 blank lines, found 1
+warehouse_stock_manager.py:39:1: E302 expected 2 blank lines, found 1
+warehouse_stock_manager.py:44:1: E302 expected 2 blank lines, found 1
+warehouse_stock_manager.py:47:80: E501 line too long (85 > 79 characters)
+warehouse_stock_manager.py:49:1: E302 expected 2 blank lines, found 1
+warehouse_stock_manager.py:54:5: F841 local variable 'total_units' is assigned to but never used
+warehouse_stock_manager.py:54:48: W291 trailing whitespace
+warehouse_stock_manager.py:57:1: E302 expected 2 blank lines, found 1
+warehouse_stock_manager.py:64:80: E501 line too long (107 > 79 characters)
+warehouse_stock_manager.py:67:1: E302 expected 2 blank lines, found 1
+warehouse_stock_manager.py:82:1: E305 expected 2 blank lines after class or function definition, found 1
